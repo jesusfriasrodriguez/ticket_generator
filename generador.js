@@ -1,10 +1,26 @@
 /**
- * ticket_generator.js
+ * generador.js
  * Lógica de generación de códigos de ticket.
+ * Reconstruido desde Encriptadores.dll · TAU.ComponentsComuns.Basics.CD06
  *
+ * PARÁMETROS INTERNOS VERIFICADOS:
+ *   hospital   → ADDRESS de config/i9500.xml (01, 10, 20)
+ *   tipoTicket → 0=1HORA, 1=1DÍA, 2=2DÍAS ... 7=7DÍAS
+ *   idTicket   → contador interno del ticket (empieza en 1), numSer = idTicket - 1
+ *   serie      → tipoTicket * 8 + numSer
  *
  * VERIFICADO: hospital=20, hab=10, tipoTicket=1, idTicket=5, 22/03/2026 → 15141813 ✓
  */
+
+// ─── Hospitales disponibles ───────────────────────────────────────────────
+// Edita los nombres según tu instalación
+const HOSPITALES = [
+  { id: 1,  nombre: 'Hospital A' },
+  { id: 10, nombre: 'Hospital B' },
+  { id: 20, nombre: 'Hospital C' },
+];
+
+// ─── Núcleo del algoritmo ─────────────────────────────────────────────────
 
 const _BITS = Array.from({ length: 32 }, (_, i) => 1 << i);
 
@@ -16,7 +32,7 @@ function _RB(ent, i, j, clau) {
 function _encod(hospital, habitacion, serie, dia, mes, ano) {
   let cript = 0, clau = 0;
 
-  // Bloque 1
+  // Bloque 1: permutación de bits
   clau = _RB(serie,      0, 24, clau);
   clau = _RB(serie,      1,  1, clau);
   clau = _RB(serie,      2, 22, clau);
@@ -46,7 +62,7 @@ function _encod(hospital, habitacion, serie, dia, mes, ano) {
   if ((serie & 0x20) === 0) clau = (clau | 0) ^ _BITS[0];
   cript = clau | 0;
 
-  // Bloque 2
+  // Bloque 2: habitacion extra
   clau = 0;
   clau = _RB(habitacion, 0,  6, clau);
   clau = _RB(habitacion, 0, 21, clau);
@@ -56,7 +72,7 @@ function _encod(hospital, habitacion, serie, dia, mes, ano) {
   clau = _RB(habitacion, 4, 16, clau);
   cript = cript ^ (clau | 0);
 
-  // Bloque 3
+  // Bloque 3: hospital
   clau = 0;
   clau = _RB(hospital, 0, 23, clau);
   clau = _RB(hospital, 1, 20, clau);
@@ -73,7 +89,7 @@ function _encod(hospital, habitacion, serie, dia, mes, ano) {
     cript = cript ^ (clau | 0);
   }
 
-  // Bloque 4
+  // Bloque 4: serie bits 0-4
   clau = 0;
   if (serie & _BITS[0]) clau += _BITS[0] + _BITS[8]  + _BITS[13] + _BITS[18] + _BITS[23];
   if (serie & _BITS[1]) clau += _BITS[3] + _BITS[16] + _BITS[20];
@@ -82,7 +98,7 @@ function _encod(hospital, habitacion, serie, dia, mes, ano) {
   if (serie & _BITS[4]) clau += _BITS[7] + _BITS[19];
   cript = cript ^ (clau | 0);
 
-  // Bloque 5
+  // Bloque 5: dia extra
   clau = 0;
   clau = _RB(dia, 0, 10, clau);
   clau = _RB(dia, 2, 17, clau);
@@ -93,31 +109,35 @@ function _encod(hospital, habitacion, serie, dia, mes, ano) {
   return cript >>> 0;
 }
 
+// ─── API pública ──────────────────────────────────────────────────────────
+
 /**
- * Genera un único código de 8 dígitos.
+ * Genera un único código de 8 dígitos para un ticket.
  *
- * @param {number} hospital    ID del hospital
+ * @param {number} hospital    ID del hospital (1, 10 o 20)
  * @param {number} habitacion  Número de habitación
- * @param {number} tipoTicket  Tipo (0–7)
- * @param {number} idTicket    ID del ticket (empieza en 1)
+ * @param {number} tipoTicket  Tipo (0=1HORA … 7=7DÍAS)
+ * @param {number} idTicket    ID del ticket, empieza en 1
  * @param {Date}   fecha       Fecha del ticket
  * @returns {string}           Código de 8 dígitos
  */
 function generarCodigo(hospital, habitacion, tipoTicket, idTicket, fecha) {
-  const serie = Math.round(tipoTicket * 8.0 + (idTicket - 1));
-  const dia   = fecha.getDate();
-  const mes   = fecha.getMonth() + 1;
-  const ano   = fecha.getFullYear() - 2000;
-  return String(_encod(hospital, habitacion, serie, dia, mes, ano)).padStart(8, '0');
+  const numSer = idTicket - 1;
+  const serie  = Math.round(tipoTicket * 8.0 + numSer);
+  const dia    = fecha.getDate();
+  const mes    = fecha.getMonth() + 1;
+  const ano    = fecha.getFullYear() - 2000;
+  const codigo = _encod(hospital, habitacion, serie, dia, mes, ano);
+  return String(codigo).padStart(8, '0');
 }
 
 /**
  * Genera todos los códigos para las combinaciones seleccionadas.
  *
  * @param {number}   hospital      ID del hospital
- * @param {number[]} habitaciones  Lista de habitaciones
- * @param {number}   tipoTicket    Tipo de ticket (0–7)
- * @param {number[]} cantidades    Lista de IDs de ticket (1–8)
+ * @param {number[]} habitaciones  Array de habitaciones seleccionadas
+ * @param {number}   tipoTicket    Tipo de ticket
+ * @param {number[]} cantidades    Array de IDs de ticket seleccionados (1-8)
  * @param {Date}     fecha         Fecha del ticket
  * @returns {{ habitacion, idTicket, codigo }[]}
  */
