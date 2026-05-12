@@ -39,7 +39,8 @@ const HOSPITALES = [
     id: 20,
     nombre: 'Santa Clotilde',
     secciones: [
-      { nombre: 'General', habitaciones: rango(10, 210) },
+      { nombre: 'Planta Baja', habitaciones: rango(7, 25) },
+      { nombre: 'Planta 1',    habitaciones: rango(101, 152) },
     ],
   },
 ];
