@@ -29,7 +29,6 @@
       max-width: 960px;
     }
 
-    /* ── Formulario ── */
     .form-group { margin-bottom: 1.2rem; }
 
     label {
@@ -54,7 +53,6 @@
       border-color: #666;
     }
 
-    /* Hospital — radio buttons */
     .hospital-options {
       display: flex;
       flex-direction: column;
@@ -69,7 +67,6 @@
       cursor: pointer;
     }
 
-    /* Habitaciones — secciones */
     .hab-actions {
       display: flex;
       gap: 0.5rem;
@@ -94,9 +91,7 @@
       overflow-y: auto;
     }
 
-    .seccion {
-      border-bottom: 1px solid #eee;
-    }
+    .seccion { border-bottom: 1px solid #eee; }
     .seccion:last-child { border-bottom: none; }
 
     .seccion-titulo {
@@ -125,7 +120,6 @@
       white-space: nowrap;
     }
 
-    /* Botón generar */
     .btn-generar {
       width: 100%;
       padding: 0.55rem;
@@ -140,7 +134,6 @@
     }
     .btn-generar:hover { background: #333; }
 
-    /* ── Resultados ── */
     .results-bar {
       display: flex;
       align-items: center;
@@ -202,7 +195,6 @@
 
 <div class="layout">
 
-  <!-- ── Formulario ── -->
   <div>
 
     <div class="form-group">
@@ -256,7 +248,6 @@
 
   </div>
 
-  <!-- ── Resultados ── -->
   <div>
     <div class="results-bar">
       <span id="resultsTitle">Resultados</span>
@@ -283,7 +274,6 @@
 <script src="ticket_generator.js"></script>
 <script src="api.js"></script>
 <script>
-  // ── Fecha de hoy ──
   document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
 
   // ── Hospitales ──
@@ -295,7 +285,7 @@
     hospContainer.appendChild(lbl);
   });
 
-  // ── Habitaciones: render dinámico según hospital ──
+  // ── Habitaciones dinámicas ──
   function renderHabitaciones(hospital) {
     const container = document.getElementById('habContainer');
     container.innerHTML = '';
@@ -304,7 +294,6 @@
       const secDiv = document.createElement('div');
       secDiv.className = 'seccion';
 
-      // Ocultar título si solo hay una sección genérica
       if (!(hospital.secciones.length === 1 && sec.nombre === 'General')) {
         const titulo = document.createElement('div');
         titulo.className = 'seccion-titulo';
@@ -326,7 +315,6 @@
     });
   }
 
-  // Render inicial con el primer hospital
   renderHabitaciones(HOSPITALES[0]);
 
   function toggleTodas(checked) {
@@ -380,7 +368,7 @@
     });
   }
 
-  // ── Verificación ──
+  // ── Verificación: selector=5 → idTicket=4 → 15141813 ✓ ──
   const test = generarCodigo(20, 10, 1, 5, new Date(2026, 2, 22));
   console.log(`Verificación: ${test} ${test === '15141813' ? '✓ OK' : '✗ ERROR'}`);
 </script>

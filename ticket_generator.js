@@ -1,9 +1,15 @@
 /**
  * ticket_generator.js
  * Lógica de generación de códigos de ticket.
+ * Reconstruido desde Encriptadores.dll · TAU.ComponentsComuns.Basics.CD06
  *
+ * PARÁMETROS:
+ *   hospital   → id del hospital (de hospitales.js, valor ADDRESS de i9500.xml)
+ *   tipoTicket → 0=1HORA, 1=1DÍA, 2=2DÍAS ... 7=7DÍAS
+ *   cantidad   → valor mostrado al usuario (1–8); internamente se usa cantidad-1 (0–7)
+ *   serie      → tipoTicket * 8 + (cantidad - 1)
  *
- * VERIFICADO: hospital=20, hab=10, tipoTicket=1, idTicket=5, 22/03/2026 → 15141813 ✓
+ * VERIFICADO: hospital=20, hab=10, tipoTicket=1, cantidad=5, 22/03/2026 → 15141813 ✓
  */
 
 const _BITS = Array.from({ length: 32 }, (_, i) => 1 << i);
@@ -99,12 +105,12 @@ function _encod(hospital, habitacion, serie, dia, mes, ano) {
  * @param {number} hospital    ID del hospital
  * @param {number} habitacion  Número de habitación
  * @param {number} tipoTicket  Tipo (0–7)
- * @param {number} idTicket    ID del ticket (empieza en 1)
+ * @param {number} cantidad    Valor del selector (1–8)
  * @param {Date}   fecha       Fecha del ticket
  * @returns {string}           Código de 8 dígitos
  */
-function generarCodigo(hospital, habitacion, tipoTicket, idTicket, fecha) {
-  const serie = Math.round(tipoTicket * 8.0 + (idTicket - 1));
+function generarCodigo(hospital, habitacion, tipoTicket, cantidad, fecha) {
+  const serie = Math.round(tipoTicket * 8.0 + (cantidad - 1));
   const dia   = fecha.getDate();
   const mes   = fecha.getMonth() + 1;
   const ano   = fecha.getFullYear() - 2000;
@@ -117,18 +123,21 @@ function generarCodigo(hospital, habitacion, tipoTicket, idTicket, fecha) {
  * @param {number}   hospital      ID del hospital
  * @param {number[]} habitaciones  Lista de habitaciones
  * @param {number}   tipoTicket    Tipo de ticket (0–7)
- * @param {number[]} cantidades    Lista de IDs de ticket (1–8)
+ * @param {number[]} cantidades    Lista de valores del selector (1–8)
  * @param {Date}     fecha         Fecha del ticket
- * @returns {{ habitacion, idTicket, codigo }[]}
+ * @returns {{ habitacion, idTicket, cantidad, codigo }[]}
+ *   idTicket → valor interno 0–7 (cantidad - 1)
+ *   cantidad → valor del selector 1–8
  */
 function generarCodigos(hospital, habitaciones, tipoTicket, cantidades, fecha) {
   const resultados = [];
   for (const habitacion of habitaciones) {
-    for (const idTicket of cantidades) {
+    for (const cantidad of cantidades) {
       resultados.push({
         habitacion,
-        idTicket,
-        codigo: generarCodigo(hospital, habitacion, tipoTicket, idTicket, fecha),
+        idTicket: cantidad - 1,
+        cantidad,
+        codigo: generarCodigo(hospital, habitacion, tipoTicket, cantidad, fecha),
       });
     }
   }
